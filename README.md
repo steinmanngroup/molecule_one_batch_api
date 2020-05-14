@@ -35,7 +35,7 @@ which can return a list of dictionaries with the results
 my_results = results.get()
 ```
 which can be printed or postprocessed.
-A convenience iterator is supplied
+A convenience iterator is supplied directly for the `BatchResult` object.
 ```python
 for r in results:
     score = r["result"]
