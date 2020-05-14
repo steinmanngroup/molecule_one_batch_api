@@ -192,3 +192,6 @@ class BatchResult(Batch):
 
     def __iter__(self):
         return iter(self._query)
+
+    def get(self):
+        return self._query
