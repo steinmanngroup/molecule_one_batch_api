@@ -14,7 +14,7 @@ import moleculeone as mo
 my_api_key = "<your api key here>"
 smiles_to_scan = ["CC(C)NC[C@@H](O)COc1cccc(c12)[nH]c3c2cccc3"]
 
-request = mo.BatchRequest(smiles_to_scan, my_api_key)
+request = mo.BatchScoreRequest(smiles_to_scan, my_api_key)
 request.submit()
 ```
 ### Querying the Batch Server
@@ -30,7 +30,7 @@ if status.is_finished():
 ```python
 results = mo.BatchResult(request, my_api_key)
 ```
-which can return a list of dictionaries with the results
+which can return a list of dictionaries with the results through the `.get()` method
 ```python
 my_results = results.get()
 ```

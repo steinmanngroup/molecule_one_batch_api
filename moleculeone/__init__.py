@@ -20,7 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from .batch import BatchRequest, BatchStatus, BatchJobStatus, BatchResult
+from .batch import BatchScoreRequest, BatchStatus, BatchJobStatus, BatchResult
 
 __author__ = "Casper Steinmann"
 __copyright__ = "Copyright 2020"

@@ -1,6 +1,6 @@
 """molecule.one API Interface
 
-This is an attempt to make a python api for the [molecule.one](https://molecule.one) batch API
+This is a python api for the [molecule.one](https://molecule.one) batch API
 """
 
 import json
@@ -17,6 +17,10 @@ URL_RESULT = "https://app.molecule.one/api/v1/batch-search-result"
 
 
 class BatchError(HTTPError):
+    pass
+
+
+class BatchServerError(BatchError):
     pass
 
 
@@ -60,12 +64,13 @@ def query_http_api(url, api_key, data=None):
     try:
         with urllib.request.urlopen(R) as f:
             response = f.read().decode('utf-8')
-    except urllib.request.HTTPError as e:
-        if e.code == 401:
+    except HTTPError as e:
+        error_code = e.code
+        if error_code == 401:
             raise BatchUnauthorizedError(e.url, e.code, e.msg, e.hdrs, e.fp)
-        elif e.code == 403:
+        elif error_code == 403:
             raise BatchForbiddenError(e.url, e.code, e.msg, e.hdrs, e.fp)
-        elif e.code == 500:
+        elif error_code == 500:
             raise BatchServerError(e.url, e.code, e.msg, e.hdrs, e.fp)
         else:
             raise
@@ -73,7 +78,7 @@ def query_http_api(url, api_key, data=None):
         return json.loads(response)
 
 
-class BatchRequest(Batch):
+class BatchScoreRequest(Batch):
     """ Submits a batch scoring request """
     def __init__(self, smiles, api_key):
         Batch.__init__(self, api_key)
