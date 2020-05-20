@@ -168,7 +168,7 @@ class BatchJobStatus(Batch):
     def __init__(self, batch_request):
         if not batch_request.was_submitted():
             raise ValueError("Invalid BatchScoreRequest. Not submitted.")
-        Batch.__init__(self, batch_request.api_key)
+        Batch.__init__(self, batch_request.api_key())
         self._id = batch_request.get_id()
         self._has_queried = False
         self._query = self.query()
