@@ -28,23 +28,32 @@ class BatchForbiddenError(BatchError):
     pass
 
 
+class BatchNotAllowedError(BatchError):
+    pass
+
+
 class BatchUnauthorizedError(BatchError):
+    pass
+
+
+class BatchTooManyRequestsError(BatchError):
     pass
 
 
 class Batch(object):
     """ The Batch base class of the molecule.one package """
-    def __init__(self, api_key):
+    def __init__(self, api_key: str):
         self._api_key = api_key
 
-    def api_key(self):
+    def api_key(self) -> str:
+        """ Returns the API key stored in the Batch object """
         return self._api_key
 
 
 def query_http_api(url, api_key, data=None):
-    """ Queries the molecule.one API with a HTTP request
+    """ Queries the molecule.one API with a HTTP request constructed based on input
 
-        if data is present, it will automatically change the method to POST
+        note: if data is present, it will automatically change the method to POST
 
         :param str url: the URL of the API to use
         :param str api_key: the API key to use
@@ -70,6 +79,10 @@ def query_http_api(url, api_key, data=None):
             raise BatchUnauthorizedError(e.url, e.code, e.msg, e.hdrs, e.fp)
         elif error_code == 403:
             raise BatchForbiddenError(e.url, e.code, e.msg, e.hdrs, e.fp)
+        elif error_code == 405:
+            raise BatchNotAllowedError(e.url, e.code, e.msg, e.hdrs, e.fp)
+        elif error_code == 429:
+            raise BatchTooManyRequestsError(e.url, e.code, e.msg, e.hdrs, e.fp)
         elif error_code == 500:
             raise BatchServerError(e.url, e.code, e.msg, e.hdrs, e.fp)
         else:
@@ -79,7 +92,7 @@ def query_http_api(url, api_key, data=None):
 
 
 class BatchScoreRequest(Batch):
-    """ Submits a batch scoring request """
+    """ A batch scoring request to the molecule.one API """
     def __init__(self, smiles, api_key):
         Batch.__init__(self, api_key)
         self._smiles = smiles[:]
@@ -97,13 +110,20 @@ class BatchScoreRequest(Batch):
         self._smiles.extend(smiles)
 
     def _encode_smiles(self):
-        smiles_string = "\", \"".join(self._smiles)
-        return "{\"targets\": " + "[\"{}\"]".format(smiles_string) + "}"
+        return json.dumps({"targets": self._smiles})
 
     def submit(self):
         data = self._encode_smiles().encode('ascii')
-        self._batch = query_http_api(URL_SEARCH, self.api_key(), data=data)
-        self._was_submitted = True
+        try:
+            self._batch = query_http_api(URL_SEARCH, self.api_key(), data=data)
+        except BatchUnauthorizedError:
+            print("Could not authorize API_KEY with molecule.one")
+        except BatchForbiddenError:
+            print("Access to molecule.one resource forbidden")
+        except BatchServerError:
+            print("Server `app.molecule.one` encountered an error")
+        else:
+            self._was_submitted = True
 
     def get_id(self):
         if not self.was_submitted():
@@ -119,12 +139,13 @@ class BatchScoreRequest(Batch):
 
 class BatchStatus(Batch):
     """ Submits a batch status requests to get information about all jobs """
-    def __init__(self, api_key):
-        Batch.__init__(self, api_key)
-        self._query = {}
+    def __init__(self, batch_request):
+        Batch.__init__(self, batch_request.api_key())
+        self._query = self.query()
 
     def query(self):
-        self._query = query_http_api(URL_SEARCH, self.api_key())
+        query = query_http_api(URL_SEARCH, self.api_key())
+        return query
 
     def get_job_ids(self):
         if "data" not in self._query:
@@ -144,10 +165,10 @@ class BatchStatus(Batch):
 
 class BatchJobStatus(Batch):
     """ Submits a batch job status request for a single job """
-    def __init__(self, batch_request, api_key):
+    def __init__(self, batch_request):
         if not batch_request.was_submitted():
-            raise ValueError("Invalid BatchRequest. Not submitted.")
-        Batch.__init__(self, api_key)
+            raise ValueError("Invalid BatchScoreRequest. Not submitted.")
+        Batch.__init__(self, batch_request.api_key)
         self._id = batch_request.get_id()
         self._has_queried = False
         self._query = self.query()
@@ -184,8 +205,8 @@ class BatchJobStatus(Batch):
 
 
 class BatchResult(Batch):
-    def __init__(self, batch_request, api_key):
-        Batch.__init__(self, api_key)
+    def __init__(self, batch_request):
+        Batch.__init__(self, batch_request.api_key())
         self._id = batch_request.get_id()
         self._query = self.query()
 

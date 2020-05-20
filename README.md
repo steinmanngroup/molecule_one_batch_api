@@ -19,7 +19,7 @@ request.submit()
 ```
 ### Querying the Batch Server
 ```python
-status = mo.BatchJobStatus(request, my_api_key)
+status = mo.BatchJobStatus(request)
 ```
 It is possible to ask if the job is finished running all jobs
 ```python
@@ -28,7 +28,7 @@ if status.is_finished():
 ```
 ### Retrieving Results
 ```python
-results = mo.BatchResult(request, my_api_key)
+results = mo.BatchResult(request)
 ```
 which can return a list of dictionaries with the results through the `.get()` method
 ```python
