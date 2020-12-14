@@ -1,5 +1,5 @@
 # molecule.one batch API
-Python interface for the molecule.one chemical synthesis accessibility API.
+Python interface for the molecule.one chemical synthesis accessibility [batch API](https://github.com/molecule-one/api)
 
 ## Usage
 The API works in three stages:
